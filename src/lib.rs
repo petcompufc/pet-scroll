@@ -1,8 +1,59 @@
 use chrono::NaiveDate;
 use serde::{de, Deserialize};
 
+#[derive(Debug)]
+pub struct Event {
+    data: EventData,
+    atts: Vec<Attendee>,
+}
+
+impl Event {
+    pub fn data(&self) -> &EventData {
+        &self.data
+    }
+
+    pub fn attendees(&self) -> &[Attendee] {
+        &self.atts
+    }
+}
+
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "UPPERCASE")]
+pub struct EventData {
+    #[serde(rename = "NOME", deserialize_with = "no_empty_string")]
+    pub name: String,
+    #[serde(rename = "DATA", deserialize_with = "validate_date")]
+    pub date: NaiveDate,
+    #[serde(rename = "TEXTO", deserialize_with = "parse_event_desc")]
+    pub desc: EventDesc,
+    #[serde(rename = "IMAGEM", deserialize_with = "no_empty_string")]
+    pub img: String,
+}
+
+impl EventData {
+    pub fn new(name: String, date: NaiveDate, desc: EventDesc, img_path: String) -> Self {
+        Self {
+            name,
+            date,
+            desc,
+            img: img_path,
+        }
+    }
+
+    pub fn as_event(self, attendees: Vec<Attendee>) -> Event {
+        Event {
+            data: self,
+            atts: attendees,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub enum EventDesc {
+    Id(u32),
+    Text(String),
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Attendee {
     #[serde(rename = "NOME", deserialize_with = "validate_att_name")]
     pub name: String,
@@ -94,36 +145,6 @@ where
     }
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "UPPERCASE")]
-pub struct Event {
-    #[serde(rename = "NOME", deserialize_with = "no_empty_string")]
-    name: String,
-    #[serde(rename = "DATA", deserialize_with = "validate_date")]
-    date: NaiveDate,
-    #[serde(rename = "TEXTO", deserialize_with = "parse_event_desc")]
-    desc: EventDesc,
-    #[serde(rename = "IMAGEM", deserialize_with = "no_empty_string")]
-    img: String,
-}
-
-impl Event {
-    pub fn new(name: String, date: NaiveDate, desc: EventDesc, img_path: String) -> Self {
-        Self {
-            name,
-            date,
-            desc,
-            img: img_path,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub enum EventDesc {
-    Id(u32),
-    Text(String),
-}
-
 fn parse_event_desc<'de, D>(deserializer: D) -> Result<EventDesc, D::Error>
 where
     D: de::Deserializer<'de>,
@@ -143,7 +164,7 @@ where
     if value.is_empty() {
         Err(de::Error::invalid_value(
             de::Unexpected::Str(&value),
-            &"No empty name",
+            &"No empty string",
         ))
     } else {
         Ok(value)
@@ -157,3 +178,4 @@ where
     let value = String::deserialize(deserializer)?;
     NaiveDate::parse_from_str(&value, "%d/%m/%Y").map_err(de::Error::custom)
 }
+

@@ -1,5 +1,5 @@
 use clap::Parser;
-use events_cli::{Attendee, Event};
+use events_cli::{Attendee, EventData};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -37,7 +37,7 @@ where
 }
 
 /// Read event from the given `src`.
-fn event<S>(src: S) -> Event
+fn event_data<S>(src: S) -> EventData
 where
     S: std::io::Read,
 {
@@ -50,13 +50,16 @@ where
 
 fn main() {
     let args = Args::parse();
+
+    let evt_file = std::fs::File::open(args.event).unwrap();
+    let buffer = std::io::BufReader::new(evt_file);
+    let evt = event_data(buffer);
+
     let atts_file = std::fs::File::open(args.attendees).unwrap();
     let buffer = std::io::BufReader::new(atts_file);
     let atts = attendees(buffer);
 
-    let evt_file = std::fs::File::open(args.event).unwrap();
-    let buffer = std::io::BufReader::new(evt_file);
-    let evt = event(buffer);
-    println!("{:?}\n", atts);
+    let evt = evt.as_event(atts);
+
     println!("{:?}", evt);
 }
