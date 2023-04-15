@@ -2,11 +2,12 @@
 name = "events-cli"
 version = "0.1.0"
 edition = "2021"
+description = "A simple certificate manager for PET Comp. events"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = "0.4.24"
+clap = { version = "4.2.2", features = ["derive"] }
 csv = "1.2.1"
 serde = { version = "1", features = ["derive"] }
-sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls", "mysql"] }
-tokio = { version = "1", features = ["full"] }
