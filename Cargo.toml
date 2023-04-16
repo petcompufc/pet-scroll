@@ -2,7 +2,7 @@
 name = "events-cli"
 version = "0.1.0"
 edition = "2021"
-description = "A simple certificate manager for PET Comp. events"
+description = "A simple certificate manager for PETComp events."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
