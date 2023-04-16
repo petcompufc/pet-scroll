@@ -1,5 +1,5 @@
 use clap::Parser;
-use events_cli::{Attendee, EventData};
+use events_cli::{event::{Attendee, EventData}, sql::ToSQL};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -61,5 +61,6 @@ fn main() {
 
     let evt = evt.as_event(atts);
 
-    println!("{:?}", evt);
+    println!("{:?}\n", evt);
+    println!("{}", evt.to_sql().into_queries());
 }
