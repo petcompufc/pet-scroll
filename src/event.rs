@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::{de, Deserialize};
 
-use crate::sql::{ToSQL, SQLReq};
+use crate::sql::{SQLReq, ToSQL};
 
 #[derive(Debug)]
 pub struct Event {
@@ -29,7 +29,7 @@ impl ToSQL for Event {
         req.add(format!(
             "SET @evid := (SELECT id FROM evento WHERE nome='{}' AND data='{}')",
             self.data.name,
-            self.data.date.format("%d/%m/%Y")
+            self.data.date.to_string()
         ));
 
         // set description id
@@ -67,8 +67,8 @@ impl ToSQL for Event {
 pub struct EventData {
     #[serde(rename = "NOME", deserialize_with = "no_empty_string")]
     pub name: String,
-    #[serde(rename = "DATA", deserialize_with = "validate_date")]
-    pub date: NaiveDate,
+    #[serde(rename = "DATA", deserialize_with = "evt_date_parser")]
+    pub date: EventDate,
     #[serde(rename = "TEXTO", deserialize_with = "parse_event_desc")]
     pub desc: EventDesc,
     #[serde(rename = "IMAGEM", deserialize_with = "no_empty_string")]
@@ -76,15 +76,6 @@ pub struct EventData {
 }
 
 impl EventData {
-    pub fn new(name: String, date: NaiveDate, desc: EventDesc, img_path: String) -> Self {
-        Self {
-            name,
-            date,
-            desc,
-            img: img_path,
-        }
-    }
-
     pub fn as_event(self, attendees: Vec<Attendee>) -> Event {
         Event {
             data: self,
@@ -99,7 +90,7 @@ impl ToSQL for EventData {
         req.add(format!(
             "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
             self.name,
-            self.date.format("%d/%m/%Y"),
+            self.date.to_string(),
             self.img
         ));
 
@@ -110,10 +101,47 @@ impl ToSQL for EventData {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub enum EventDesc {
     Id(u32),
     Text(String),
+}
+
+#[derive(Debug)]
+pub enum EventDate {
+    Day(NaiveDate),
+    Period { start: NaiveDate, end: NaiveDate },
+}
+
+impl ToString for EventDate {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Day(day) => format!("dia {}", day.format("%d/%m/%Y")),
+            Self::Period { start, end } => format!(
+                "período de {} a {}",
+                start.format("%d/%m/%Y"),
+                end.format("%d/%m/%Y")
+            ),
+        }
+    }
+}
+
+impl TryFrom<&str> for EventDate {
+    type Error = chrono::ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value.split_once('-') {
+            Some((start, end)) => {
+                let start = NaiveDate::parse_from_str(start.trim(), "%d/%m/%Y")?;
+                let end = NaiveDate::parse_from_str(end.trim(), "%d/%m/%Y")?;
+                Ok(Self::Period { start, end })
+            }
+            None => {
+                let day = NaiveDate::parse_from_str(value.trim(), "%d/%m/%Y")?;
+                Ok(Self::Day(day))
+            }
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -123,8 +151,7 @@ pub struct Attendee {
     #[serde(rename = "CPF", deserialize_with = "validate_cpf")]
     pub cpf: Cpf,
     #[serde(rename = "CH", deserialize_with = "validate_workload")]
-    // TODO: change to u32
-    pub workload: f32,
+    pub workload: u32,
 }
 
 impl ToSQL for Vec<Attendee> {
@@ -135,12 +162,14 @@ impl ToSQL for Vec<Attendee> {
             .map(|att| format!("('{}', '{}')", att.name, att.cpf.as_str()))
             .collect::<Vec<_>>()
             .join(",");
-        req.add(format!("INSERT IGNORE INTO usuario (nome, identificacao) VALUES {vals}"));
+        req.add(format!(
+            "INSERT IGNORE INTO usuario (nome, identificacao) VALUES {vals}"
+        ));
         req
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Cpf {
     id: String,
 }
@@ -206,18 +235,18 @@ where
     Cpf::new(value).ok_or(err)
 }
 
-fn validate_workload<'de, D>(deserializer: D) -> Result<f32, D::Error>
+fn validate_workload<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where
     D: de::Deserializer<'de>,
 {
-    let value = f32::deserialize(deserializer)?;
+    let value = f64::deserialize(deserializer)?;
     if value < 0.0 {
         Err(de::Error::invalid_value(
-            de::Unexpected::Float(value as f64),
+            de::Unexpected::Float(value),
             &"Workload greater or equal than 0.0",
         ))
     } else {
-        Ok(value)
+        Ok(value.ceil() as u32)
     }
 }
 
@@ -247,10 +276,10 @@ where
     }
 }
 
-fn validate_date<'de, D>(deserializer: D) -> Result<NaiveDate, D::Error>
+fn evt_date_parser<'de, D>(deserializer: D) -> Result<EventDate, D::Error>
 where
     D: de::Deserializer<'de>,
 {
     let value = String::deserialize(deserializer)?;
-    NaiveDate::parse_from_str(&value, "%d/%m/%Y").map_err(de::Error::custom)
+    EventDate::try_from(value.as_str()).map_err(de::Error::custom)
 }

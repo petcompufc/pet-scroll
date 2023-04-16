@@ -5,7 +5,7 @@ pub trait ToSQL {
 #[derive(Debug)]
 pub struct SQLReq {
     db: String,
-    queries: Vec<String>
+    queries: Vec<String>,
 }
 
 impl SQLReq {
@@ -13,7 +13,7 @@ impl SQLReq {
         Self {
             db: db.to_owned(),
             queries: Vec::new(),
-        } 
+        }
     }
 
     pub fn add(&mut self, query: String) {

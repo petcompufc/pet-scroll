@@ -1,5 +1,8 @@
 use clap::Parser;
-use events_cli::{event::{Attendee, EventData}, sql::ToSQL};
+use events_cli::{
+    event::{Attendee, EventData},
+    sql::ToSQL,
+};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
