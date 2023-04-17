@@ -4,10 +4,29 @@ use serde::{de, Deserialize};
 use crate::sql::{SQLReq, ToSQL};
 
 #[derive(Debug)]
+pub struct Certificate {
+    event: Event,
+    img: String,
+}
+
+impl ToSQL for Certificate {
+    fn to_sql(&self, db: &str) -> SQLReq {
+        let mut req = SQLReq::new(db);
+        req.add(format!(
+            "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
+            self.event.data.name,
+            self.event.data.date.to_string(),
+            self.img
+        ));
+        req.extend(self.event.to_sql(db)).unwrap();
+        req
+    }
+}
+
+#[derive(Debug)]
 pub struct Event {
     data: EventData,
     atts: Vec<Attendee>,
-    img: String,
 }
 
 impl Event {
@@ -19,22 +38,15 @@ impl Event {
         &self.atts
     }
 
-    pub fn img(&self) -> &str {
-        &self.img
+    pub fn into_cert(self, img: String) -> Certificate {
+        Certificate { event: self, img }
     }
 }
 
 impl ToSQL for Event {
-    fn to_sql(&self) -> SQLReq {
-        let mut req = SQLReq::new("petcomp");
-        req.extend(self.atts.to_sql()).unwrap();
-
-        req.add(format!(
-            "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
-            self.data.name,
-            self.data.date.to_string(),
-            self.img
-        ));
+    fn to_sql(&self, db: &str) -> SQLReq {
+        let mut req = SQLReq::new(db);
+        req.extend(self.atts.to_sql(db)).unwrap();
 
         if let EventDesc::Text(txt) = &self.data.desc {
             req.add(format!("INSERT INTO texto VALUES ('{txt}')"));
@@ -88,11 +100,10 @@ pub struct EventData {
 }
 
 impl EventData {
-    pub fn as_event(self, attendees: Vec<Attendee>, img: String) -> Event {
+    pub fn into_event(self, attendees: Vec<Attendee>) -> Event {
         Event {
             data: self,
             atts: attendees,
-            img,
         }
     }
 }
@@ -151,8 +162,8 @@ pub struct Attendee {
 }
 
 impl ToSQL for Vec<Attendee> {
-    fn to_sql(&self) -> SQLReq {
-        let mut req = SQLReq::new("petcomp");
+    fn to_sql(&self, db: &str) -> SQLReq {
+        let mut req = SQLReq::new(db);
         let vals = self
             .iter()
             .map(|att| format!("('{}', '{}')", att.name, att.cpf.as_str()))

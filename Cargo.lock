@@ -262,18 +262,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "events-cli"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "csv",
- "dotenvy",
- "serde",
- "ssh2",
-]
-
-[[package]]
 name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -488,6 +476,18 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "winapi",
+]
+
+[[package]]
+name = "pet-cert"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "csv",
+ "dotenvy",
+ "serde",
+ "ssh2",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 use clap::Parser;
-use events_cli::{
+use pet_cert::{
     event::{Attendee, EventData},
     sql::ToSQL,
 };
@@ -18,6 +18,7 @@ struct Args {
     ///
     /// Upload the image to the SFTP server requires that SFTP_ADDRESS,
     /// SFTP_USER and SFTP_PWD environment variables are defined.
+    /// It is recommended to use a .env file to store those credentials.
     #[arg(short, long, value_parser = existing_file)]
     img: PathBuf,
     /// SQL queries output file
@@ -77,8 +78,8 @@ fn main() {
     let atts = attendees(buffer);
 
     let img_name = args.img.file_name().unwrap().to_str().unwrap();
-    let evt = evt.as_event(atts, format!("img/{img_name}"));
-    let queries = evt.to_sql().into_queries();
+    let cert = evt.into_event(atts).into_cert(format!("img/{img_name}"));
+    let queries = cert.to_sql("petcomp").into_queries();
 
     std::fs::File::create(args.output)
         .expect("failed to create output file")
@@ -87,7 +88,7 @@ fn main() {
 
     // Upload event image to the SFTP server
     println!("Uploading event image...");
-    let conn = events_cli::sftp::connect(addr, &user, &pwd).unwrap();
+    let conn = pet_cert::sftp::connect(addr, &user, &pwd).unwrap();
     let remote_path = format!("./certificados/img/{img_name}");
-    events_cli::sftp::upload(&conn, args.img, remote_path).unwrap();
+    pet_cert::sftp::upload(&conn, args.img, remote_path).unwrap();
 }

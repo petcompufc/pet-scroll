@@ -1,5 +1,5 @@
 pub trait ToSQL {
-    fn to_sql(&self) -> SQLReq;
+    fn to_sql(&self, db: &str) -> SQLReq;
 }
 
 #[derive(Debug)]

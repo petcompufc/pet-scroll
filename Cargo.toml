@@ -1,5 +1,5 @@
 [package]
-name = "events-cli"
+name = "pet-cert"
 version = "0.1.0"
 edition = "2021"
 description = "A simple certificate manager for PETComp events."
