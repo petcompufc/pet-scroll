@@ -7,6 +7,7 @@ use crate::sql::{SQLReq, ToSQL};
 pub struct Event {
     data: EventData,
     atts: Vec<Attendee>,
+    img: String,
 }
 
 impl Event {
@@ -17,22 +18,36 @@ impl Event {
     pub fn attendees(&self) -> &[Attendee] {
         &self.atts
     }
+
+    pub fn img(&self) -> &str {
+        &self.img
+    }
 }
 
 impl ToSQL for Event {
     fn to_sql(&self) -> SQLReq {
         let mut req = SQLReq::new("petcomp");
-        req.extend(self.data.to_sql()).unwrap();
         req.extend(self.atts.to_sql()).unwrap();
 
-        // set event id
+        req.add(format!(
+            "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
+            self.data.name,
+            self.data.date.to_string(),
+            self.img
+        ));
+
+        if let EventDesc::Text(txt) = &self.data.desc {
+            req.add(format!("INSERT INTO texto VALUES ('{txt}')"));
+        }
+
+        // get event id
         req.add(format!(
             "SET @evid := (SELECT id FROM evento WHERE nome='{}' AND data='{}')",
             self.data.name,
             self.data.date.to_string()
         ));
 
-        // set description id
+        // get description id
         let part = match &self.data.desc {
             EventDesc::Id(id) => format!("SET @txtid = {id}"),
             EventDesc::Text(txt) => {
@@ -46,12 +61,11 @@ impl ToSQL for Event {
             .iter()
             .enumerate()
             .map(|(i, att)| {
-                // set user id
+                // get user id
                 req.add(format!(
                     "SET @uid{i} := (SELECT id FROM usuario WHERE identificacao='{}')",
                     att.cpf.as_str()
                 ));
-
                 format!("(@uid{i}, @evid, @txtid, {})", att.workload)
             })
             .collect::<Vec<_>>()
@@ -71,33 +85,15 @@ pub struct EventData {
     pub date: EventDate,
     #[serde(rename = "TEXTO", deserialize_with = "parse_event_desc")]
     pub desc: EventDesc,
-    #[serde(rename = "IMAGEM", deserialize_with = "no_empty_string")]
-    pub img: String,
 }
 
 impl EventData {
-    pub fn as_event(self, attendees: Vec<Attendee>) -> Event {
+    pub fn as_event(self, attendees: Vec<Attendee>, img: String) -> Event {
         Event {
             data: self,
             atts: attendees,
+            img,
         }
-    }
-}
-
-impl ToSQL for EventData {
-    fn to_sql(&self) -> SQLReq {
-        let mut req = SQLReq::new("petcomp");
-        req.add(format!(
-            "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
-            self.name,
-            self.date.to_string(),
-            self.img
-        ));
-
-        if let EventDesc::Text(txt) = &self.desc {
-            req.add(format!("INSERT INTO texto VALUES ('{txt}')"));
-        }
-        req
     }
 }
 

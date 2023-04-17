@@ -10,4 +10,6 @@ description = "A simple certificate manager for PETComp events."
 chrono = "0.4.24"
 clap = { version = "4.2.2", features = ["derive"] }
 csv = "1.2.1"
+dotenvy = "0.15.7"
 serde = { version = "1", features = ["derive"] }
+ssh2 = "0.9.4"
