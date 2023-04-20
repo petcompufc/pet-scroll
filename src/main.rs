@@ -60,26 +60,33 @@ where
         .expect("Error while parsing STDIN")
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let args = Args::parse();
     let img_name = match (&args.cert_img, &args.upload_img) {
         (Some(img), None) | (None, Some(img)) => {
-            let fname = img.file_name().unwrap().to_str().unwrap();
-            fname.to_lowercase().replace(' ', "_")
+            img
+                .file_name()
+                .expect("Error while getting image file name")
+                .to_str()
+                .expect("Thi image name is not a valid UTF-8")
+                .split_whitespace()
+                .map(|word| word.to_lowercase())
+                .collect::<Vec<_>>()
+                .join("_")
         }
         _ => unreachable!("Both args should not be provided at the same time"),
     };
 
     print!("Reading event file...");
-    std::io::stdout().flush().unwrap();
-    let evt_file = std::fs::File::open(args.event).unwrap();
+    std::io::stdout().flush()?;
+    let evt_file = std::fs::File::open(args.event)?;
     let buffer = std::io::BufReader::new(evt_file);
     let evt = event_data(buffer);
     println!(" Done!");
 
     print!("Reading attendees file...");
-    std::io::stdout().flush().unwrap();
-    let atts_file = std::fs::File::open(args.attendees).unwrap();
+    std::io::stdout().flush()?;
+    let atts_file = std::fs::File::open(args.attendees)?;
     let buffer = std::io::BufReader::new(atts_file);
     let atts = attendees(buffer);
     println!(" Done!");
@@ -95,7 +102,7 @@ fn main() {
 
     if let Some(img) = args.upload_img {
         print!("Uploading event image...");
-        std::io::stdout().flush().unwrap();
+        std::io::stdout().flush()?;
 
         // Verify environment variables.
         let _ = dotenvy::dotenv();
@@ -105,9 +112,10 @@ fn main() {
         let pwd = std::env::var("SFTP_PWD").expect("SFTP_PWD environment variable not found");
 
         // Upload event image to the SFTP server
-        let conn = pet_cert::sftp::connect(addr, &user, &pwd).unwrap();
+        let conn = pet_cert::sftp::connect(addr, &user, &pwd)?;
         let remote_path = format!("./certificados/img/{img_name}");
-        pet_cert::sftp::upload(&conn, img, remote_path).unwrap();
+        pet_cert::sftp::upload(&conn, img, remote_path)?;
         println!(" Done!")
     }
+    Ok(())
 }

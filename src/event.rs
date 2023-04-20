@@ -49,7 +49,7 @@ impl ToSQL for Event {
         req.extend(self.atts.to_sql(db)).unwrap();
 
         if let EventDesc::Text(txt) = &self.data.desc {
-            req.add(format!("INSERT INTO texto VALUES ('{txt}')"));
+            req.add(format!("INSERT INTO texto (texto) VALUES ('{txt}')"));
         }
 
         // get event id
@@ -83,7 +83,7 @@ impl ToSQL for Event {
             .collect::<Vec<_>>()
             .join(",");
         req.add(format!(
-            "INSERT INTO participacao (usuario, evento, ch, texto) VALUES {values}"
+            "INSERT INTO participacao (usuario, evento, texto, ch) VALUES {values}"
         ));
         req
     }
