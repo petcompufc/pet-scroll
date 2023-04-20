@@ -1,5 +1,5 @@
 use clap::Parser;
-use pet_cert::{
+use pet_scroll::{
     event::{Attendee, EventData},
     sql::ToSQL,
 };
@@ -112,9 +112,9 @@ fn main() -> std::io::Result<()> {
         let pwd = std::env::var("SFTP_PWD").expect("SFTP_PWD environment variable not found");
 
         // Upload event image to the SFTP server
-        let conn = pet_cert::sftp::connect(addr, &user, &pwd)?;
+        let conn = pet_scroll::sftp::connect(addr, &user, &pwd)?;
         let remote_path = format!("./certificados/img/{img_name}");
-        pet_cert::sftp::upload(&conn, img, remote_path)?;
+        pet_scroll::sftp::upload(&conn, img, remote_path)?;
         println!(" Done!")
     }
     Ok(())
