@@ -22,20 +22,38 @@ Options:
 - openssl-devel ou libssl
 - pkg-config
 
-Obs.: Algumas distros linux integram o openssl-devel junto com o pacote
-openssl.
+Nós recomendamos que as dependências sejam instaladas seguindo o
+[rust-openssl setup](https://docs.rs/openssl/latest/openssl/#automatic).
+
+## Instalação
+Se certifique que as depêndencias estejam devidamente instaladas e rode o
+seguinte comando:
+
+```bash
+git clone "https://github.com/petcompufc/pet-scroll" && \
+cargo install --path ./pet-scroll
+```
+
+Se nenhum erro ocorrer você poderá rodar este programa digitando `pet-scroll`
+no terminal.
+
+Para desinstalar rode:
+```bash
+cargo uninstall pet-scroll
+```
 
 ## Build
 As seguintes instruções assumem que você tenha o ambiente de desenvolvimento
 em Rust corretamente configurado. Qualquer dúvida recorra ao
 [site oficial](https://www.rust-lang.org/).
 
-Instale as dependências seguindo o
-[rust-openssl setup](https://docs.rs/openssl/latest/openssl/#automatic)
-e compile o projeto com:
-```sh
+Compile o programa com o comando abaixo:
+
+```bash
 cargo build --release
 ```
+
+O binário compilado estará localizado no diretório `target/release`.
 
 Para mais informações leia a sessão
 ["Building and Running a Cargo Project"](https://doc.rust-lang.org/stable/book/ch01-03-hello-cargo.html#building-and-running-a-cargo-project) do livro _The Rust Programming Language_.
