@@ -3,6 +3,13 @@ Um aplicação via linha de comando para automatizar alguns processos
 relacionados á emissão de certificados referentes a eventos organizados pelo
 PET.
 
+Como, aparentemente, o acesso remoto ao banco de dados MySQL é restrito a alguns
+IPs autorizados, atualmente a única maneira eficiente de atualizar o banco 
+é importando um arquivo `.sql` na interface Web.
+
+O objetivo deste programa é escrever esse arquivo `.sql` e subir, se necessário,
+a imagem do certificado para o servidor de SFTP.
+
 ```
 A simple certificate manager for PETComp events.
 
@@ -65,7 +72,7 @@ A aplicação espera receber as seguintes entradas:
 |---------------- | --------------- | --------------- |
 | `event`    | Arquivo CSV    | Contém os dados do evento |
 | `attendees`    | Arquivo CSV | Os participantes do evento |
-| `cert-img` <sup>1</sup> | Texto | Imagem de um certificado que está no servidor (sem o caminho pro arquivo) |
+| `cert-img` <sup>1</sup> | Texto | Nome da imagem de um certificado que está no servidor (sem o caminho pro arquivo) |
 | `upload-img` <sup>1</sup> | Imagem PNG 1122×792 | Imagem para subir pro servidor do site |
 | `output` | Caminho para um arquivo (existente ou não) | Onde a saída do programa será gravada |
 
@@ -79,7 +86,15 @@ O arquivo de `event` segue o seguinte template:
 
 | NOME | DATA | TEXTO |
 | --- | --- | --- |
-| nome do evento | dia do evento no formato dia/mês/ano ou período do evento no formato dia/mês/ano - dia/mês/ano | id de um texto já existente (que pode ser encontrado no banco de dados na tabela 'texto') ou um novo texto de certificado (Ex.: Certificamos que #nome# de CPF/identificacao #identificacao# participou do evento #evento# com carga horaria de #cargaHoraria# hora(s) no #data#.) |
+| nome do evento | dia do evento no formato "dia/mês/ano" ou período do evento no formato "dia/mês/ano - dia/mês/ano" | id de um texto já existente ou um novo texto de certificado |
+
+Um texto de certificado se parece com isso:
+
+```
+Certificamos que #nome# de CPF/identificacao #identificacao# participou do 
+evento #evento# com carga horaria de #cargaHoraria# hora(s) no #data#.
+```
+
 
 O arquivo de `attendees` segue o seguinte template:
 
