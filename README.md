@@ -26,10 +26,19 @@ Options:
 ```
 
 ## Dependências
+- rust
+- cargo
 - openssl-devel ou libssl
 - pkg-config
 
-Nós recomendamos que as dependências sejam instaladas seguindo o
+As instruções assumem que você tenha corretamente configurado com a linguagem 
+Rust e o gerenciador de pacotes da linguagem (Cargo) instalados.
+
+Para instalar o ambiente de desenvolvimento (Rust + Cargo) siga as [intruções
+de instalação](https://www.rust-lang.org/tools/install).
+Qualquer dúvida recorra ao [site oficial](https://www.rust-lang.org/).
+
+Nós recomendamos que as demais dependências sejam instaladas seguindo o
 [rust-openssl setup](https://docs.rs/openssl/latest/openssl/#automatic).
 
 ## Instalação
@@ -44,17 +53,13 @@ cargo install --path ./pet-scroll
 Se nenhum erro ocorrer você poderá rodar este programa digitando `pet-scroll`
 no terminal.
 
-Para desinstalar rode:
+Para desinstalar o programa rode:
 ```bash
 cargo uninstall pet-scroll
 ```
 
 ## Build
-As seguintes instruções assumem que você tenha o ambiente de desenvolvimento
-em Rust corretamente configurado. Qualquer dúvida recorra ao
-[site oficial](https://www.rust-lang.org/).
-
-Compile o programa com o comando abaixo:
+Compile o programa com o seguinte comando:
 
 ```bash
 cargo build --release
