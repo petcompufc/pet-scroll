@@ -46,8 +46,7 @@ Se certifique que as depêndencias estejam devidamente instaladas e rode o
 seguinte comando:
 
 ```bash
-git clone "https://github.com/petcompufc/pet-scroll" && \
-cargo install --path ./pet-scroll
+cargo install --git "https://github.com/petcompufc/pet-scroll"
 ```
 
 Se nenhum erro ocorrer você poderá rodar este programa digitando `pet-scroll`
