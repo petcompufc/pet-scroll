@@ -1,6 +1,6 @@
 use clap::Parser;
 use pet_scroll::{
-    event::{Attendee, EventData},
+    cert::csv_data::{Attendee, EventData},
     sql::ToSQL,
 };
 use std::{io::Write, path::PathBuf};
@@ -63,17 +63,15 @@ where
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     let img_name = match (&args.cert_img, &args.upload_img) {
-        (Some(img), None) | (None, Some(img)) => {
-            img
-                .file_name()
-                .expect("Error while getting image file name")
-                .to_str()
-                .expect("Thi image name is not a valid UTF-8")
-                .split_whitespace()
-                .map(|word| word.to_lowercase())
-                .collect::<Vec<_>>()
-                .join("_")
-        }
+        (Some(img), None) | (None, Some(img)) => img
+            .file_name()
+            .expect("Error while getting image file name")
+            .to_str()
+            .expect("Thi image name is not a valid UTF-8")
+            .split_whitespace()
+            .map(|word| word.to_lowercase())
+            .collect::<Vec<_>>()
+            .join("_"),
         _ => unreachable!("Both args should not be provided at the same time"),
     };
 
