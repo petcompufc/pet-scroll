@@ -90,7 +90,7 @@ fn main() -> std::io::Result<()> {
     println!(" Done!");
 
     let cert = evt.into_event(atts).into_cert(format!("img/{img_name}"));
-    let queries = cert.to_sql("petcomp").into_queries();
+    let queries = cert.to_sql().into_req("petcomp").to_string();
 
     println!("Saving SQL queries at {}", args.output.display());
     std::fs::File::create(args.output)
