@@ -36,6 +36,8 @@ impl<T: std::fmt::Display> std::fmt::Display for ParseError<T> {
     }
 }
 
+impl<T: std::fmt::Display + std::fmt::Debug> std::error::Error for ParseError<T> {}
+
 #[derive(Debug, Deserialize)]
 pub struct EventData {
     #[serde(rename = "NOME", deserialize_with = "parse_evt_name")]
@@ -105,16 +107,19 @@ impl ToString for EventDate {
     }
 }
 
-// TODO: deal with the case where "start > end" on Period
 impl TryFrom<String> for EventDate {
-    type Error = chrono::ParseError;
+    type Error = Box<dyn std::error::Error>;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.split_once('-') {
             Some((start, end)) => {
                 let start = NaiveDate::parse_from_str(start.trim(), "%d/%m/%Y")?;
                 let end = NaiveDate::parse_from_str(end.trim(), "%d/%m/%Y")?;
-                Ok(Self::Period { start, end })
+                if start >= end {
+                    Err(ParseError::new("Start of the event happen before the end", value).into())
+                } else {
+                    Ok(Self::Period { start, end })
+                }
             }
             None => {
                 let day = NaiveDate::parse_from_str(value.trim(), "%d/%m/%Y")?;
@@ -151,15 +156,11 @@ fn validate_att_name(name: String) -> Result<String, ParseError<String>> {
 }
 deserialize_fn!(parse_att_name(): validate_att_name, String => String);
 
-// TODO: make sure that the workload is greater than 0.0
 fn validate_workload(workload: f64) -> Result<u32, ParseError<f64>> {
-    if workload < 0.0 {
-        Err(ParseError::new(
-            "Workload greater or equal than 0.0",
-            workload,
-        ))
-    } else {
+    if workload > 0.0 {
         Ok(workload.ceil() as u32)
+    } else {
+        Err(ParseError::new("Workload greater than 0.0", workload))
     }
 }
 deserialize_fn!(parse_workload(): validate_workload, f64 => u32);
@@ -231,6 +232,8 @@ mod tests {
     #[test]
     fn check_evt_date() {
         assert!(EventDate::try_from("01/01/2023-42/54/3050".to_owned()).is_err());
+        assert!(EventDate::try_from("02/01/2023 - 01/01/2023".to_owned()).is_err());
+        assert!(EventDate::try_from("02/01/2023 - 02/01/2023".to_owned()).is_err());
 
         let date =
             EventDate::try_from(" 01/01/2023  ".to_owned()).expect("Should be a valid event Day");
@@ -256,12 +259,15 @@ mod tests {
     #[test]
     fn check_att_workload() {
         assert!(validate_workload(-1.0).is_err());
+        assert!(validate_workload(0.0).is_err());
         assert_eq!(Ok(2), validate_workload(1.3));
+        assert_eq!(Ok(5), validate_workload(5.0));
     }
 
     #[test]
     fn check_att_cpf() {
         assert!(Cpf::new("08911684350".to_owned()).is_err());
+        assert!(Cpf::new("089.116.843.50".to_owned()).is_err());
 
         let cpf = Cpf::new("089.116.843-50".to_owned()).expect("it should be a valid CPF");
         assert_eq!("089.116.843-50", cpf.as_str());
