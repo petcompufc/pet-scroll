@@ -1,4 +1,4 @@
-use crate::sql::{SQLReq, ToSQL};
+use crate::sql::{QueryPool, ToSQL};
 
 pub mod csv_data;
 use csv_data::{Attendee, EventData, EventDesc};
@@ -10,16 +10,16 @@ pub struct Certificate {
 }
 
 impl ToSQL for Certificate {
-    fn to_sql(&self, db: &str) -> SQLReq {
-        let mut req = SQLReq::new(db);
-        req.add(format!(
+    fn to_sql(&self) -> QueryPool {
+        let mut pool = QueryPool::new();
+        pool.add(format!(
             "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
             self.event.data.name,
             self.event.data.date.to_string(),
             self.img
         ));
-        req.extend(self.event.to_sql(db)).unwrap();
-        req
+        pool.add_many(self.event.to_sql());
+        pool
     }
 }
 
@@ -44,16 +44,16 @@ impl Event {
 }
 
 impl ToSQL for Event {
-    fn to_sql(&self, db: &str) -> SQLReq {
-        let mut req = SQLReq::new(db);
-        req.extend(self.atts.to_sql(db)).unwrap();
+    fn to_sql(&self) -> QueryPool {
+        let mut pool = QueryPool::new();
+        pool.add_many(self.atts.to_sql());
 
         if let EventDesc::Text(txt) = &self.data.desc {
-            req.add(format!("INSERT INTO texto (texto) VALUES ('{txt}')"));
+            pool.add(format!("INSERT INTO texto (texto) VALUES ('{txt}')"));
         }
 
         // get event id
-        req.add(format!(
+        pool.add(format!(
             "SET @evid := (SELECT id FROM evento WHERE nome='{}' AND data='{}')",
             self.data.name,
             self.data.date.to_string()
@@ -66,7 +66,7 @@ impl ToSQL for Event {
                 format!("SET @txtid := (SELECT id FROM texto WHERE texto='{txt}')")
             }
         };
-        req.add(part);
+        pool.add(part);
 
         let values = self
             .atts
@@ -74,7 +74,7 @@ impl ToSQL for Event {
             .enumerate()
             .map(|(i, att)| {
                 // get user id
-                req.add(format!(
+                pool.add(format!(
                     "SET @uid{i} := (SELECT id FROM usuario WHERE identificacao='{}')",
                     att.cpf.as_str()
                 ));
@@ -82,24 +82,24 @@ impl ToSQL for Event {
             })
             .collect::<Vec<_>>()
             .join(",");
-        req.add(format!(
+        pool.add(format!(
             "INSERT INTO participacao (usuario, evento, texto, ch) VALUES {values}"
         ));
-        req
+        pool
     }
 }
 
 impl ToSQL for Vec<Attendee> {
-    fn to_sql(&self, db: &str) -> SQLReq {
-        let mut req = SQLReq::new(db);
+    fn to_sql(&self) -> QueryPool {
+        let mut pool = QueryPool::new();
         let vals = self
             .iter()
             .map(|att| format!("('{}', '{}')", att.name, att.cpf.as_str()))
             .collect::<Vec<_>>()
             .join(",");
-        req.add(format!(
+        pool.add(format!(
             "INSERT IGNORE INTO usuario (nome, identificacao) VALUES {vals}"
         ));
-        req
+        pool
     }
 }
