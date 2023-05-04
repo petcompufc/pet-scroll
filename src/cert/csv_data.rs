@@ -38,7 +38,7 @@ impl<T: std::fmt::Display> std::fmt::Display for ParseError<T> {
 
 impl<T: std::fmt::Display + std::fmt::Debug> std::error::Error for ParseError<T> {}
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct EventData {
     #[serde(rename = "NOME", deserialize_with = "parse_evt_name")]
     pub name: String,
@@ -66,7 +66,7 @@ fn validate_evt_name(name: String) -> Result<String, ParseError<String>> {
 }
 deserialize_fn!(parse_evt_name(): validate_evt_name, String => String);
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EventDesc {
     Id(u32),
     Text(String),
@@ -88,7 +88,7 @@ impl TryFrom<String> for EventDesc {
 }
 deserialize_fn!(parse_evt_desc(): EventDesc::try_from, String => EventDesc);
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EventDate {
     Day(NaiveDate),
     Period { start: NaiveDate, end: NaiveDate },
@@ -130,7 +130,7 @@ impl TryFrom<String> for EventDate {
 }
 deserialize_fn!(parse_evt_date(): EventDate::try_from, String => EventDate);
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Attendee {
     #[serde(rename = "NOME", deserialize_with = "parse_att_name")]
     pub name: String,
@@ -165,7 +165,7 @@ fn validate_workload(workload: f64) -> Result<u32, ParseError<f64>> {
 }
 deserialize_fn!(parse_workload(): validate_workload, f64 => u32);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Cpf {
     id: String,
 }
