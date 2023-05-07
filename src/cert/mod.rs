@@ -108,6 +108,7 @@ impl ToSQL for Vec<Attendee> {
 mod tests {
     use super::*;
     use crate::cert::csv_data::{Cpf, EventData, EventDate, EventDesc};
+    use time::macros::date;
 
     #[test]
     fn atts_to_sql() {
@@ -134,10 +135,7 @@ mod tests {
         let data = EventData {
             name: "Event".to_owned(),
             desc: EventDesc::Text("Some description".to_owned()),
-            date: EventDate::Day(
-                chrono::NaiveDate::from_ymd_opt(2023, 5, 4)
-                    .expect("2023/05/04 is not a valid ymd date"),
-            ),
+            date: EventDate::Day(date!(2023 - 05 - 04)),
         };
         let att_a = Attendee {
             name: "A".to_owned(),
@@ -174,10 +172,7 @@ mod tests {
         let data = EventData {
             name: "Event".to_owned(),
             desc: EventDesc::Text("Some description".to_owned()),
-            date: EventDate::Day(
-                chrono::NaiveDate::from_ymd_opt(2023, 5, 4)
-                    .expect("2023/05/04 is not a valid ymd date"),
-            ),
+            date: EventDate::Day(date!(2023 - 5 - 4)),
         };
         let att_a = Attendee {
             name: "A".to_owned(),
@@ -201,10 +196,7 @@ mod tests {
         let data = EventData {
             name: "Event".to_owned(),
             desc: EventDesc::Text("Some description".to_owned()),
-            date: EventDate::Day(
-                chrono::NaiveDate::from_ymd_opt(2023, 5, 4)
-                    .expect("2023/05/04 is not a valid ymd date"),
-            ),
+            date: EventDate::Day(date!(2023 - 5 - 4)),
         };
         let att_a = Attendee {
             name: "A".to_owned(),
