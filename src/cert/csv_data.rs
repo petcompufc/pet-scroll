@@ -1,7 +1,9 @@
-use chrono::NaiveDate;
 use serde::{de, Deserialize};
+use time::{format_description::FormatItem, macros::format_description, Date};
 
 use super::Event;
+
+const DATE_FMT: &[FormatItem<'_>] = format_description!("[day]/[month]/[year]");
 
 macro_rules! deserialize_fn {
     ($f:ident(): $fn:expr, $from:ty => $b:ty) => {
@@ -90,18 +92,18 @@ deserialize_fn!(parse_evt_desc(): EventDesc::try_from, String => EventDesc);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EventDate {
-    Day(NaiveDate),
-    Period { start: NaiveDate, end: NaiveDate },
+    Day(Date),
+    Period { start: Date, end: Date },
 }
 
 impl ToString for EventDate {
     fn to_string(&self) -> String {
         match self {
-            Self::Day(day) => format!("dia {}", day.format("%d/%m/%Y")),
+            Self::Day(date) => format!("dia {}", date.format(DATE_FMT).unwrap()),
             Self::Period { start, end } => format!(
                 "período de {} a {}",
-                start.format("%d/%m/%Y"),
-                end.format("%d/%m/%Y")
+                start.format(DATE_FMT).unwrap(),
+                end.format(DATE_FMT).unwrap()
             ),
         }
     }
@@ -113,8 +115,8 @@ impl TryFrom<String> for EventDate {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.split_once('-') {
             Some((start, end)) => {
-                let start = NaiveDate::parse_from_str(start.trim(), "%d/%m/%Y")?;
-                let end = NaiveDate::parse_from_str(end.trim(), "%d/%m/%Y")?;
+                let start = Date::parse(start.trim(), DATE_FMT)?;
+                let end = Date::parse(end.trim(), DATE_FMT)?;
                 if start >= end {
                     Err(ParseError::new("Start of the event happen before the end", value).into())
                 } else {
@@ -122,7 +124,7 @@ impl TryFrom<String> for EventDate {
                 }
             }
             None => {
-                let day = NaiveDate::parse_from_str(value.trim(), "%d/%m/%Y")?;
+                let day = Date::parse(value.trim(), DATE_FMT)?;
                 Ok(Self::Day(day))
             }
         }

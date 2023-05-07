@@ -7,7 +7,7 @@ description = "A simple certificate manager for PETComp events."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.24"
+time = { version = "0.3.21", features = ["formatting", "parsing", "macros"] }
 clap = { version = "4.2.2", features = ["derive"] }
 csv = "1.2.1"
 dotenvy = "0.15.7"
