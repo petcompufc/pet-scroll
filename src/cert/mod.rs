@@ -15,7 +15,7 @@ impl ToSQL for Certificate {
 
         // insert event
         pool.add(format!(
-            "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
+            "INSERT IGNORE INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
             self.event.data.name,
             self.event.data.date.to_string(),
             self.img
@@ -62,7 +62,7 @@ impl ToSQL for Event {
 
         // insert event text
         if let EventDesc::Text(txt) = &self.data.desc {
-            pool.add(format!("INSERT INTO texto (texto) VALUES ('{txt}')"));
+            pool.add(format!("INSERT IGNORE INTO texto (texto) VALUES ('{txt}')"));
         }
 
         // get description id
@@ -160,7 +160,7 @@ mod tests {
 
         let result = [
             &atts_sql,
-            "INSERT INTO texto (texto) VALUES ('Some description')",
+            "INSERT IGNORE INTO texto (texto) VALUES ('Some description')",
             "SET @txtid := (SELECT id FROM texto WHERE texto='Some description')",
             "SET @uid0 := (SELECT id FROM usuario WHERE identificacao='000.000.000-00')",
             "SET @uid1 := (SELECT id FROM usuario WHERE identificacao='111.111.111-11')",
@@ -219,7 +219,7 @@ mod tests {
         let cert = event.into_cert("cert.png".to_owned());
 
         let result = [
-            "INSERT INTO evento (nome, data, img) VALUES ('Event', 'dia 04/05/2023', 'cert.png')",
+            "INSERT IGNORE INTO evento (nome, data, img) VALUES ('Event', 'dia 04/05/2023', 'cert.png')",
             "SET @evid := (SELECT id FROM evento WHERE nome='Event' AND data='dia 04/05/2023' AND img='cert.png')",
             &event_sql,
         ]
