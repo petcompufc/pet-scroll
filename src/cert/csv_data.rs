@@ -174,12 +174,13 @@ pub struct Cpf {
 
 impl Cpf {
     pub fn new(value: String) -> Result<Self, ParseError<String>> {
+        let value = value.trim();
         let err = Err(ParseError::new(
             "Valid CPF of the form 000.000.000-00",
-            value.clone(),
+            value.to_owned(),
         ));
 
-        for (i, part) in value.trim().split('.').enumerate() {
+        for (i, part) in value.split('.').enumerate() {
             if i == 2 {
                 let (left, right) = match part.split_once('-') {
                     Some(v) => v,
@@ -197,7 +198,9 @@ impl Cpf {
                 return err;
             }
         }
-        Ok(Self { id: value })
+        Ok(Self {
+            id: value.to_owned(),
+        })
     }
 
     pub fn as_str(&self) -> &str {
@@ -271,7 +274,10 @@ mod tests {
         assert!(Cpf::new("08911684350".to_owned()).is_err());
         assert!(Cpf::new("089.116.843.50".to_owned()).is_err());
 
-        let cpf = Cpf::new("089.116.843-50".to_owned()).expect("it should be a valid CPF");
-        assert_eq!("089.116.843-50", cpf.as_str());
+        let cpf1 = Cpf::new("089.116.843-50".to_owned()).expect("it should be a valid CPF");
+        assert_eq!("089.116.843-50", cpf1.as_str());
+
+        let cpf2 = Cpf::new("   089.116.843-50 ".to_owned()).expect("it should be a valid CPF");
+        assert_eq!(cpf1, cpf2);
     }
 }
