@@ -15,7 +15,7 @@ impl ToSQL for Certificate {
 
         // insert event
         pool.add(format!(
-            "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
+            "INSERT IGNORE INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
             self.event.data.name,
             self.event.data.date.to_string(),
             self.img
@@ -62,7 +62,7 @@ impl ToSQL for Event {
 
         // insert event text
         if let EventDesc::Text(txt) = &self.data.desc {
-            pool.add(format!("INSERT INTO texto (texto) VALUES ('{txt}')"));
+            pool.add(format!("INSERT IGNORE INTO texto (texto) VALUES ('{txt}')"));
         }
 
         // get description id
@@ -131,7 +131,7 @@ mod tests {
         let pool = vec![att_a, att_b].to_sql();
 
         let vals = "('A', '000.000.000-00'),('B', '111.111.111-11')";
-        let result = format!("INSERT IGNORE INTO usuario (nome, identificacao) VALUES {vals}");
+        let result = format!("INSERT IGNORE INTO usuario (nome, identificacao) VALUES {vals};\n");
 
         assert_eq!(result, pool.to_string());
     }
@@ -158,16 +158,18 @@ mod tests {
 
         let event = data.into_event(atts);
 
-        let result = [
-            &atts_sql,
-            "INSERT INTO texto (texto) VALUES ('Some description')",
-            "SET @txtid := (SELECT id FROM texto WHERE texto='Some description')",
-            "SET @uid0 := (SELECT id FROM usuario WHERE identificacao='000.000.000-00')",
-            "SET @uid1 := (SELECT id FROM usuario WHERE identificacao='111.111.111-11')",
-            "INSERT INTO participacao (usuario, evento, texto, ch) \
-                VALUES (@uid0, @evid, @txtid, 1),(@uid1, @evid, @txtid, 2)",
-        ]
-        .join(";\n");
+        let mut result = atts_sql;
+        result.push_str(
+            &[
+                "INSERT IGNORE INTO texto (texto) VALUES ('Some description')",
+                "SET @txtid := (SELECT id FROM texto WHERE texto='Some description')",
+                "SET @uid0 := (SELECT id FROM usuario WHERE identificacao='000.000.000-00')",
+                "SET @uid1 := (SELECT id FROM usuario WHERE identificacao='111.111.111-11')",
+                "INSERT INTO participacao (usuario, evento, texto, ch) \
+                VALUES (@uid0, @evid, @txtid, 1),(@uid1, @evid, @txtid, 2);\n",
+            ]
+            .join(";\n"),
+        );
 
         assert_eq!(result, event.to_sql().to_string());
     }
@@ -219,7 +221,7 @@ mod tests {
         let cert = event.into_cert("cert.png".to_owned());
 
         let result = [
-            "INSERT INTO evento (nome, data, img) VALUES ('Event', 'dia 04/05/2023', 'cert.png')",
+            "INSERT IGNORE INTO evento (nome, data, img) VALUES ('Event', 'dia 04/05/2023', 'cert.png')",
             "SET @evid := (SELECT id FROM evento WHERE nome='Event' AND data='dia 04/05/2023' AND img='cert.png')",
             &event_sql,
         ]

@@ -52,7 +52,11 @@ impl IntoIterator for QueryPool {
 
 impl std::fmt::Display for QueryPool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.pool.join(";\n"))
+        let queries = self
+            .pool
+            .iter()
+            .fold(String::new(), |acc, query| acc + query + ";\n");
+        write!(f, "{queries}")
     }
 }
 
@@ -132,7 +136,7 @@ mod tests {
     #[test]
     fn pool_display() {
         let pool = QueryPool::new().queries(["QUERY 1".to_owned(), "QUERY 2".to_owned()]);
-        let str = "QUERY 1;\nQUERY 2";
+        let str = "QUERY 1;\nQUERY 2;\n";
         assert_eq!(str, pool.to_string());
     }
 
@@ -147,7 +151,7 @@ mod tests {
     fn req_display() {
         let pool = QueryPool::new().queries(["QUERY 1".to_owned(), "QUERY 2".to_owned()]);
         let req = Request::new("database").queries(pool);
-        let str = "USE database;\nQUERY 1;\nQUERY 2";
+        let str = "USE database;\nQUERY 1;\nQUERY 2;\n";
         assert_eq!(str, req.to_string());
     }
 }
