@@ -179,7 +179,7 @@ impl Cpf {
             value.clone(),
         ));
 
-        for (i, part) in value.split('.').enumerate() {
+        for (i, part) in value.trim().split('.').enumerate() {
             if i == 2 {
                 let (left, right) = match part.split_once('-') {
                     Some(v) => v,
