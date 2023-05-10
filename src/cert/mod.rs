@@ -12,12 +12,24 @@ pub struct Certificate {
 impl ToSQL for Certificate {
     fn to_sql(&self) -> QueryPool {
         let mut pool = QueryPool::new();
+
+        // insert event
         pool.add(format!(
             "INSERT INTO evento (nome, data, img) VALUES ('{}', '{}', '{}')",
             self.event.data.name,
             self.event.data.date.to_string(),
             self.img
         ));
+
+        // get event id
+        pool.add(format!(
+            "SET @evid := (SELECT id FROM evento WHERE nome='{}' AND data='{}' AND img='{}')",
+            self.event.data.name,
+            self.event.data.date.to_string(),
+            self.img
+        ));
+
+        // add event queries
         pool.add_many(self.event.to_sql());
         pool
     }
@@ -48,16 +60,10 @@ impl ToSQL for Event {
         let mut pool = QueryPool::new();
         pool.add_many(self.atts.to_sql());
 
+        // insert event text
         if let EventDesc::Text(txt) = &self.data.desc {
             pool.add(format!("INSERT INTO texto (texto) VALUES ('{txt}')"));
         }
-
-        // get event id
-        pool.add(format!(
-            "SET @evid := (SELECT id FROM evento WHERE nome='{}' AND data='{}')",
-            self.data.name,
-            self.data.date.to_string()
-        ));
 
         // get description id
         let part = match &self.data.desc {
@@ -155,7 +161,6 @@ mod tests {
         let result = [
             &atts_sql,
             "INSERT INTO texto (texto) VALUES ('Some description')",
-            "SET @evid := (SELECT id FROM evento WHERE nome='Event' AND data='dia 04/05/2023')",
             "SET @txtid := (SELECT id FROM texto WHERE texto='Some description')",
             "SET @uid0 := (SELECT id FROM usuario WHERE identificacao='000.000.000-00')",
             "SET @uid1 := (SELECT id FROM usuario WHERE identificacao='111.111.111-11')",
@@ -215,6 +220,7 @@ mod tests {
 
         let result = [
             "INSERT INTO evento (nome, data, img) VALUES ('Event', 'dia 04/05/2023', 'cert.png')",
+            "SET @evid := (SELECT id FROM evento WHERE nome='Event' AND data='dia 04/05/2023' AND img='cert.png')",
             &event_sql,
         ]
         .join(";\n");
