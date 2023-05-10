@@ -1,4 +1,9 @@
 # PETScroll :scroll:
+[![build](https://img.shields.io/github/actions/workflow/status/petcompufc/pet-scroll/rust.yml)](.github/workflows/rust.yml)
+[![issues](https://img.shields.io/github/issues/petcompufc/pet-scroll)](https://github.com/petcompufc/pet-scroll/issues)
+[![pull requests](https://img.shields.io/github/issues-pr/petcompufc/pet-scroll)](https://github.com/petcompufc/pet-scroll/pulls)
+[![license](https://img.shields.io/github/license/petcompufc/pet-scroll)](./LICENSE)
+
 Um aplicação via linha de comando para automatizar alguns processos
 relacionados á emissão de certificados referentes a eventos organizados pelo
 PET.
