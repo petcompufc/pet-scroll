@@ -120,17 +120,17 @@ mod tests {
     fn atts_to_sql() {
         let att_a = Attendee {
             name: "A".to_owned(),
-            cpf: Cpf::new("000.000.000-00".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("207.062.844-29".to_owned()).expect("valid cpf"),
             workload: 1,
         };
         let att_b = Attendee {
             name: "B".to_owned(),
-            cpf: Cpf::new("111.111.111-11".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("647.748.630-09".to_owned()).expect("valid cpf"),
             workload: 1,
         };
         let pool = vec![att_a, att_b].to_sql();
 
-        let vals = "('A', '000.000.000-00'),('B', '111.111.111-11')";
+        let vals = "('A', '207.062.844-29'),('B', '647.748.630-09')";
         let result = format!("INSERT IGNORE INTO usuario (nome, identificacao) VALUES {vals};\n");
 
         assert_eq!(result, pool.to_string());
@@ -145,12 +145,12 @@ mod tests {
         };
         let att_a = Attendee {
             name: "A".to_owned(),
-            cpf: Cpf::new("000.000.000-00".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("754.751.875-33".to_owned()).expect("valid cpf"),
             workload: 1,
         };
         let att_b = Attendee {
             name: "B".to_owned(),
-            cpf: Cpf::new("111.111.111-11".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("647.748.630-09".to_owned()).expect("valid cpf"),
             workload: 2,
         };
         let atts = vec![att_a, att_b];
@@ -163,8 +163,8 @@ mod tests {
             &[
                 "INSERT IGNORE INTO texto (texto) VALUES ('Some description')",
                 "SET @txtid := (SELECT id FROM texto WHERE texto='Some description')",
-                "SET @uid0 := (SELECT id FROM usuario WHERE identificacao='000.000.000-00')",
-                "SET @uid1 := (SELECT id FROM usuario WHERE identificacao='111.111.111-11')",
+                "SET @uid0 := (SELECT id FROM usuario WHERE identificacao='754.751.875-33')",
+                "SET @uid1 := (SELECT id FROM usuario WHERE identificacao='647.748.630-09')",
                 "INSERT INTO participacao (usuario, evento, texto, ch) \
                 VALUES (@uid0, @evid, @txtid, 1),(@uid1, @evid, @txtid, 2);\n",
             ]
@@ -183,12 +183,12 @@ mod tests {
         };
         let att_a = Attendee {
             name: "A".to_owned(),
-            cpf: Cpf::new("000.000.000-00".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("754.751.875-33".to_owned()).expect("valid cpf"),
             workload: 1,
         };
         let att_b = Attendee {
             name: "B".to_owned(),
-            cpf: Cpf::new("111.111.111-11".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("647.748.630-09".to_owned()).expect("valid cpf"),
             workload: 2,
         };
         let event = data.into_event(vec![att_a, att_b]);
@@ -207,12 +207,12 @@ mod tests {
         };
         let att_a = Attendee {
             name: "A".to_owned(),
-            cpf: Cpf::new("000.000.000-00".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("754.751.875-33".to_owned()).expect("valid cpf"),
             workload: 1,
         };
         let att_b = Attendee {
             name: "B".to_owned(),
-            cpf: Cpf::new("111.111.111-11".to_owned()).expect("valid cpf"),
+            cpf: Cpf::new("647.748.630-09".to_owned()).expect("valid cpf"),
             workload: 2,
         };
         let event = data.into_event(vec![att_a, att_b]);
