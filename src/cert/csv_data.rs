@@ -180,24 +180,21 @@ impl Cpf {
             value.to_owned(),
         ));
 
-        for (i, part) in value.split('.').enumerate() {
-            if i == 2 {
-                let (left, right) = match part.split_once('-') {
-                    Some(v) => v,
-                    None => return err,
-                };
+        let (id, digit) = match value.trim().split_once('-') {
+            Some(vals) => vals,
+            None => return err
+        };
 
-                if left.len() != 3 || left.parse::<u64>().is_err() {
-                    return err;
-                }
+        if digit.len() != 2 || digit.parse::<u8>().is_err() {
+            return err;
+        }
 
-                if right.len() != 2 || right.parse::<u16>().is_err() {
-                    return err;
-                }
-            } else if part.len() != 3 && part.parse::<u16>().is_err() {
+        for part in id.split('.') {
+            if part.len() != 3 || part.parse::<u16>().is_err() {
                 return err;
             }
         }
+
         Ok(Self {
             id: value.to_owned(),
         })
