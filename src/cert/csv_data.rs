@@ -175,10 +175,7 @@ pub struct Cpf {
 impl Cpf {
     pub fn new(value: String) -> Result<Self, ParseError<String>> {
         let value = value.trim();
-        let err = Err(ParseError::new(
-            "Valid CPF",
-            value.to_owned(),
-        ));
+        let err = Err(ParseError::new("Valid CPF", value.to_owned()));
 
         let (nums, digit) = match value.split_once('-') {
             Some(vals) => vals,
@@ -198,10 +195,8 @@ impl Cpf {
 
             for c in part.chars() {
                 match c.to_digit(10) {
-                    Some(n) => {
-                        nums_arr[i] = n as u16
-                    },
-                    None => return err
+                    Some(n) => nums_arr[i] = n as u16,
+                    None => return err,
                 }
                 i += 1;
             }
