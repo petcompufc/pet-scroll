@@ -176,31 +176,57 @@ impl Cpf {
     pub fn new(value: String) -> Result<Self, ParseError<String>> {
         let value = value.trim();
         let err = Err(ParseError::new(
-            "Valid CPF of the form 000.000.000-00",
+            "Valid CPF",
             value.to_owned(),
         ));
 
-        for (i, part) in value.split('.').enumerate() {
-            if i == 2 {
-                let (left, right) = match part.split_once('-') {
-                    Some(v) => v,
-                    None => return err,
-                };
+        let (nums, digit) = match value.split_once('-') {
+            Some(vals) => vals,
+            None => return err,
+        };
 
-                if left.len() != 3 || left.parse::<u64>().is_err() {
-                    return err;
-                }
+        if digit.len() != 2 {
+            return err;
+        }
 
-                if right.len() != 2 || right.parse::<u16>().is_err() {
-                    return err;
-                }
-            } else if part.len() != 3 && part.parse::<u16>().is_err() {
+        let mut nums_arr = [0; 9];
+        let mut i = 0;
+        for part in nums.split('.') {
+            if part.len() != 3 {
                 return err;
             }
+
+            for c in part.chars() {
+                match c.to_digit(10) {
+                    Some(n) => {
+                        nums_arr[i] = n as u16
+                    },
+                    None => return err
+                }
+                i += 1;
+            }
         }
-        Ok(Self {
-            id: value.to_owned(),
-        })
+
+        let expected_digit = Self::gen_digit(nums_arr);
+        match digit.parse::<u8>() {
+            Ok(n) if n == expected_digit => Ok(Self {
+                id: value.to_owned(),
+            }),
+            _ => err,
+        }
+    }
+
+    fn gen_digit(nums: [u16; 9]) -> u8 {
+        let mut sum = 0;
+        for i in 0..9 {
+            sum += nums[i as usize] * (10 - i);
+        }
+        let j = if sum % 11 <= 1 { 0 } else { 11 - (sum % 11) };
+
+        sum += nums.iter().sum::<u16>() + (2 * j);
+        let k = if sum % 11 <= 1 { 0 } else { 11 - (sum % 11) };
+
+        (j * 10 + k) as u8
     }
 
     pub fn as_str(&self) -> &str {
@@ -271,13 +297,13 @@ mod tests {
 
     #[test]
     fn check_att_cpf() {
-        assert!(Cpf::new("08911684350".to_owned()).is_err());
-        assert!(Cpf::new("089.116.843.50".to_owned()).is_err());
+        assert!(Cpf::new("68116578553".to_owned()).is_err());
+        assert!(Cpf::new("633.834.740.89".to_owned()).is_err());
 
-        let cpf1 = Cpf::new("089.116.843-50".to_owned()).expect("it should be a valid CPF");
-        assert_eq!("089.116.843-50", cpf1.as_str());
+        let cpf1 = Cpf::new("762.050.858-95".to_owned()).expect("it should be a valid CPF");
+        assert_eq!("762.050.858-95", cpf1.as_str());
 
-        let cpf2 = Cpf::new("   089.116.843-50 ".to_owned()).expect("it should be a valid CPF");
+        let cpf2 = Cpf::new("   762.050.858-95 ".to_owned()).expect("it should be a valid CPF");
         assert_eq!(cpf1, cpf2);
     }
 }
